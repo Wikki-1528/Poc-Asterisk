@@ -15,9 +15,8 @@ export function initBridge(server: http.Server): void {
     const rawUrl = req.url ?? '';
     const parsedUrl = new URL(rawUrl, 'ws://localhost');
 
-    const agentId = parsedUrl.searchParams.get('agent_id') ?? '';
+    const voice = parsedUrl.searchParams.get('voice') ?? undefined;
     const languageHint = parsedUrl.searchParams.get('language') ?? 'en-IN';
-    const campaignId = parsedUrl.searchParams.get('campaign_id') ?? undefined;
     const customerName = parsedUrl.searchParams.get('customer_name') ?? undefined;
     const rawSystemPrompt = parsedUrl.searchParams.get('system_prompt');
     const systemPrompt = rawSystemPrompt ? decodeURIComponent(rawSystemPrompt) : undefined;
@@ -25,14 +24,13 @@ export function initBridge(server: http.Server): void {
     const callId = crypto.randomUUID();
 
     const options: UltravoxSessionOptions = {
-      agentId,
+      voice,
       languageHint,
-      campaignId,
       systemPrompt,
-      templateContext: customerName ? { customerName } : undefined,
+      customerName,
     };
 
-    logger.info({ callId, agentId, languageHint, campaignId, customerName }, 'New Asterisk WS connection');
+    logger.info({ callId, voice, languageHint, customerName }, 'New Asterisk WS connection');
 
     const session = new CallSession(callId, ws, options, activeSessions);
     activeSessions.set(callId, session);

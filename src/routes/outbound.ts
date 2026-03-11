@@ -5,12 +5,12 @@ import logger from '../logger';
 const router = Router();
 
 router.post('/call/outbound', (req: Request, res: Response) => {
-  const { phoneNumber, systemPrompt, languageHint, voice, templateContext } = req.body as {
+  const { phoneNumber, systemPrompt, voice, languageHint, customerName } = req.body as {
     phoneNumber?: string;
     systemPrompt?: string;
-    languageHint?: string;
     voice?: string;
-    templateContext?: Record<string, string>;
+    languageHint?: string;
+    customerName?: string;
   };
 
   if (!phoneNumber) {
@@ -20,7 +20,7 @@ router.post('/call/outbound', (req: Request, res: Response) => {
 
   const callId = crypto.randomUUID();
 
-  logger.info({ callId, phoneNumber, systemPrompt, languageHint, voice, templateContext }, 'Outbound call queued');
+  logger.info({ callId, phoneNumber, voice, languageHint, customerName }, 'Outbound call queued');
 
   res.status(200).json({ success: true, message: 'Outbound call queued', callId });
 });

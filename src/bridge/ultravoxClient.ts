@@ -4,27 +4,22 @@ import { config } from '../config';
 import logger from '../logger';
 
 export interface UltravoxSessionOptions {
-  agentId: string;
   systemPrompt?: string;
   voice?: string;
   languageHint?: string;
-  campaignId?: string;
-  templateContext?: Record<string, string>;
+  customerName?: string;
 }
 
 export async function createUltravoxSession(options: UltravoxSessionOptions): Promise<string> {
   const url = `${config.ULTRAVOX_BASE_URL}/api/calls`;
 
-  const resolvedPrompt = options.templateContext
-    ? (options.systemPrompt ?? 'You are a helpful CallMetrik voice agent.').replace(
-        /\{\{(\w+)\}\}/g,
-        (_, key) => options.templateContext?.[key] ?? `{{${key}}}`
-      )
-    : (options.systemPrompt ?? 'You are a helpful CallMetrik voice agent.');
+  const basePrompt = options.systemPrompt ?? 'You are a helpful CallMetrik voice agent.';
+  const resolvedPrompt = options.customerName
+    ? basePrompt.replace(/\{\{customerName\}\}/g, options.customerName)
+    : basePrompt;
 
-  const body = {
+  const body: Record<string, unknown> = {
     systemPrompt: resolvedPrompt,
-    voice: options.voice ?? 'Mark',
     languageHint: options.languageHint ?? 'en-IN',
     medium: {
       serverWebSocket: {
@@ -34,7 +29,11 @@ export async function createUltravoxSession(options: UltravoxSessionOptions): Pr
     },
   };
 
-  logger.info({ agentId: options.agentId, campaignId: options.campaignId }, 'Creating Ultravox session');
+  if (options.voice) {
+    body.voice = options.voice;
+  }
+
+  logger.info({ voice: options.voice, languageHint: options.languageHint }, 'Creating Ultravox session');
 
   let response;
   try {
@@ -63,7 +62,7 @@ export async function createUltravoxSession(options: UltravoxSessionOptions): Pr
     throw new Error('joinUrl missing from Ultravox response');
   }
 
-  logger.info({ agentId: options.agentId, joinUrl }, 'Ultravox session created');
+  logger.info({ joinUrl }, 'Ultravox session created');
   return joinUrl;
 }
 
